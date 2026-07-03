@@ -1,0 +1,29 @@
+drug_name,class,formula,mw,smiles,mechanism
+Moclobemide,RIMA,C13H17ClN2O2,268.74,O=C(NCCN1CCOCC1)c1ccc(Cl)cc1,Reversible MAO-A inhibitor
+Clorgyline,RIMA,C13H15Cl2NO,292.18,C#CCN(C)CCCOc1ccc(Cl)cc1Cl,MAO-A inhibitor (irreversible)
+Fluoxetine,SSRI,C17H18F3NO,309.33,CNCCC(c1ccccc1)Oc1ccc(C(F)(F)F)cc1,Serotonin reuptake inhibitor
+Fluvoxamine,SSRI,C15H21F3N2O2,318.34,COCCCCC(=NOCCN)c1ccc(C(F)(F)F)cc1,Serotonin reuptake inhibitor
+Paroxetine,SSRI,C19H20FNO3,329.37,Fc1ccc(cc1)[C@@H]1CCNC[C@H]1COc1ccc2OCOc2c1,Serotonin reuptake inhibitor
+Sertraline,SSRI,C17H17Cl2N,306.23,CN[C@H]1CC[C@@H](c2ccc(Cl)c(Cl)c2)c2ccccc21,Serotonin reuptake inhibitor
+Citalopram,SSRI,C20H21FN2O,324.39,CN(C)CCCC1(c2ccc(F)cc2)OCc2cc(C#N)ccc21,Serotonin reuptake inhibitor
+Escitalopram,SSRI,C20H21FN2O,324.39,CN(C)CCC[C@@]1(c2ccc(F)cc2)OCc2cc(C#N)ccc21,S-enantiomer of Citalopram
+Dapoxetine,SSRI,C21H23NO,305.41,CN(C)[C@@H](CCOc1cccc2ccccc12)c1ccccc1,Short-acting SSRI (PE treatment)
+Trazodone,Atypical,C19H22ClN5O,371.86,O=c1n(CCCN2CCN(c3cccc(Cl)c3)CC2)nc2ccccn12,Serotonin antagonist/reuptake inhibitor
+Mianserin,Atypical,C18H20N2,264.37,CN1CCN2c3ccccc3Cc3ccccc3C2C1,NaSSA blocks alpha2 H1 5-HT
+Mirtazapine,Atypical,C17H19N3,265.35,CN1CCN2c3ncccc3Cc3ccccc3C2C1,NaSSA blocks alpha2 H1 5-HT2
+Bupropion,Atypical,C13H18ClNO,239.74,CC(NC(C)(C)C)C(=O)c1cccc(Cl)c1,NDRI dopamine/noradrenaline reuptake
+Tianeptine,Atypical,C21H25ClN2O4S,436.95,Clc1cc2c(cc1)C(c3c(N(C)S2(=O)=O)cccc3)NCCCCCCC(=O)O,Mu-opioid agonist/glutamate modulator
+Amineptine,Atypical,C22H27NO2,341.46,OC(=O)CCCCCCNC1c2ccccc2CCc2ccccc21,Dopamine reuptake inhibitor
+Atomoxetine,Atypical,C17H21NO,255.36,CNCC[C@@H](Oc1ccccc1C)c1ccccc1,Selective norepinephrine reuptake inhibitor
+Imipramine,TCA,C19H24N2,280.41,CN(C)CCCN1c2ccccc2CCc2ccccc21,Blocks NA + 5-HT reuptake
+Amitriptyline,TCA,C20H23N,277.4,CN(C)CCC=C1c2ccccc2CCc2ccccc21,Blocks NA + 5-HT reuptake
+Trimipramine,TCA,C20H26N2,294.44,CC(CN1c2ccccc2CCc2ccccc21)CN(C)C,Blocks NA + 5-HT reuptake
+Doxepin,TCA,C19H21NO,279.38,CN(C)CCC=C1c2ccccc2COc2ccccc21,Blocks NA + 5-HT + H1
+Dothiepin,TCA,C19H21NS,295.44,CN(C)CCC=C1c2ccccc2CSc2ccccc21,Blocks NA + 5-HT reuptake
+Clomipramine,TCA,C19H23ClN2,314.86,CN(C)CCCN1c2ccccc2CCc2ccc(Cl)cc21,Potent 5-HT reuptake inhibitor
+Desipramine,TCA,C18H22N2,266.38,CNCCCN1c2ccccc2CCc2ccccc21,Selective NA reuptake inhibitor
+Nortriptyline,TCA,C19H21N,263.38,CNCCC=C1c2ccccc2CCc2ccccc21,Selective NA reuptake inhibitor
+Amoxapine,TCA,C17H16ClN3O,313.78,Clc1ccc2Oc3ccccc3N=C(N4CCNCC4)c2c1,TCA + D2 antagonist
+Reboxetine,TCA,C19H23NO3,313.39,CCOc1ccccc1OC(c1ccccc1)C1OCCNC1,Selective norepinephrine reuptake inhibitor
+Venlafaxine,SNRI,C17H27NO2,277.41,COc1ccc(cc1)C(CN(C)C)C1(O)CCCCC1,Blocks NA + 5-HT reuptake
+Duloxetine,SNRI,C18H19NOS,297.41,CNCC[C@H](Oc1cccc2ccccc12)c1cccs1,Blocks NA + 5-HT reuptake

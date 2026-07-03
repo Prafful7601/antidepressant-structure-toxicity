@@ -1,0 +1,11 @@
+feature,weight
+tricyclic_core,0.22625
+carboxylic_acid,0.19000000000000003
+piperazine,0.1845
+long_alkyl_chain,0.10399999999999998
+morpholine,0.07999999999999999
+basic_secondary_amine,0.055
+trifluoromethyl,0.010000000000000009
+tertiary_amine,0.005750000000000002
+nitrile,-0.020000000000000004
+para_halogen_phenyl,-0.0295

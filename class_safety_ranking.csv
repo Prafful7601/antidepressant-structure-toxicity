@@ -1,0 +1,28 @@
+class,safety_rank_in_class,drug_name,mechanism,cardiac,hepatic,neurologic,metabolic,n_signals,toxicity_index
+Atypical,1,Atomoxetine,Selective norepinephrine reuptake inhibitor,0.79,0.68,0.9,0.85,0,-0.221
+Atypical,2,Bupropion,NDRI dopamine/noradrenaline reuptake,0.87,0.57,1.26,1.07,0,-0.101
+Atypical,3,Trazodone,Serotonin antagonist/reuptake inhibitor,0.94,0.76,1.03,1.32,0,-0.008
+Atypical,4,Mirtazapine,NaSSA blocks alpha2 H1 5-HT2,1.03,0.95,0.93,1.09,0,-0.003
+Atypical,5,Tianeptine,Mu-opioid agonist/glutamate modulator,0.95,1.94,0.82,1.0,0,0.103
+Atypical,6,Mianserin,NaSSA blocks alpha2 H1 5-HT,0.88,2.35,0.84,1.02,1,0.143
+Atypical,7,Amineptine,Dopamine reuptake inhibitor,3.19,2.37,0.51,2.81,0,0.597
+RIMA,1,Moclobemide,Reversible MAO-A inhibitor,0.65,0.55,3.93,0.56,1,-0.057
+SNRI,1,Duloxetine,Blocks NA + 5-HT reuptake,0.64,1.17,1.2,0.88,0,-0.058
+SNRI,2,Venlafaxine,Blocks NA + 5-HT reuptake,1.07,0.99,1.11,0.8,0,-0.016
+SSRI,1,Dapoxetine,Short-acting SSRI (PE treatment),1.59,0.32,1.41,0.09,0,-0.677
+SSRI,2,Sertraline,Serotonin reuptake inhibitor,0.89,0.48,1.11,1.16,0,-0.149
+SSRI,3,Escitalopram,S-enantiomer of Citalopram,0.96,0.72,0.96,1.03,0,-0.094
+SSRI,4,Paroxetine,Serotonin reuptake inhibitor,0.72,0.88,1.1,1.1,0,-0.064
+SSRI,5,Fluvoxamine,Serotonin reuptake inhibitor,0.83,0.83,0.93,1.23,0,-0.061
+SSRI,6,Citalopram,Serotonin reuptake inhibitor,1.07,0.75,1.17,1.01,0,-0.011
+SSRI,7,Fluoxetine,Serotonin reuptake inhibitor,1.14,1.21,0.84,1.08,0,0.056
+TCA,1,Imipramine,Blocks NA + 5-HT reuptake,1.29,0.41,0.96,0.95,0,-0.181
+TCA,2,Doxepin,Blocks NA + 5-HT + H1,1.03,0.53,0.86,1.04,0,-0.179
+TCA,3,Nortriptyline,Selective NA reuptake inhibitor,1.0,0.57,1.21,0.98,0,-0.096
+TCA,4,Amitriptyline,Blocks NA + 5-HT reuptake,1.15,1.0,0.91,0.93,0,-0.01
+TCA,5,Clomipramine,Potent 5-HT reuptake inhibitor,1.23,1.09,0.86,0.85,0,-0.007
+TCA,6,Dothiepin,Blocks NA + 5-HT reuptake,0.88,1.36,1.18,0.97,0,0.078
+TCA,7,Desipramine,Selective NA reuptake inhibitor,1.56,1.16,0.72,1.21,0,0.115
+TCA,8,Trimipramine,Blocks NA + 5-HT reuptake,1.47,1.38,0.91,1.24,0,0.204
+TCA,9,Amoxapine,TCA + D2 antagonist,1.62,1.84,1.01,1.1,0,0.301
+TCA,10,Reboxetine,Selective norepinephrine reuptake inhibitor,1.33,2.0,1.41,1.0,0,0.332

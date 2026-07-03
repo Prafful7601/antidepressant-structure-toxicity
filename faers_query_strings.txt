@@ -1,0 +1,88 @@
+Exact openFDA query used per drug (drug/event.json?search=...)
+Overall receive-date range retrieved: 19950202 - 20260331
+Pulled without a date filter (whatever openFDA served as of run date); this file pins the actual range for reproducibility.
+
+moclobemide:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22moclobemide%22+OR+patient.drug.medicinalproduct:%22moclobemide%22+OR+patient.drug.medicinalproduct:%22manerix%22+OR+patient.drug.medicinalproduct:%22aurorix%22)
+
+clorgyline:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22clorgyline%22+OR+patient.drug.medicinalproduct:%22clorgyline%22+OR+patient.drug.medicinalproduct:%22clorgiline%22)
+
+fluoxetine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22fluoxetine%22+OR+patient.drug.medicinalproduct:%22fluoxetine%22+OR+patient.drug.medicinalproduct:%22prozac%22+OR+patient.drug.medicinalproduct:%22sarafem%22+OR+patient.drug.medicinalproduct:%22fluoxetine+hcl%22)
+
+fluvoxamine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22fluvoxamine%22+OR+patient.drug.medicinalproduct:%22fluvoxamine%22+OR+patient.drug.medicinalproduct:%22luvox%22+OR+patient.drug.medicinalproduct:%22faverin%22)
+
+paroxetine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22paroxetine%22+OR+patient.drug.medicinalproduct:%22paroxetine%22+OR+patient.drug.medicinalproduct:%22paxil%22+OR+patient.drug.medicinalproduct:%22seroxat%22+OR+patient.drug.medicinalproduct:%22paroxetine+hcl%22)
+
+sertraline:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22sertraline%22+OR+patient.drug.medicinalproduct:%22sertraline%22+OR+patient.drug.medicinalproduct:%22zoloft%22+OR+patient.drug.medicinalproduct:%22lustral%22+OR+patient.drug.medicinalproduct:%22sertraline+hcl%22)
+
+citalopram:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22citalopram%22+OR+patient.drug.medicinalproduct:%22citalopram%22+OR+patient.drug.medicinalproduct:%22celexa%22+OR+patient.drug.medicinalproduct:%22cipramil%22)
+
+escitalopram:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22escitalopram%22+OR+patient.drug.medicinalproduct:%22escitalopram%22+OR+patient.drug.medicinalproduct:%22lexapro%22+OR+patient.drug.medicinalproduct:%22cipralex%22)
+
+dapoxetine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22dapoxetine%22+OR+patient.drug.medicinalproduct:%22dapoxetine%22+OR+patient.drug.medicinalproduct:%22priligy%22)
+
+trazodone:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22trazodone%22+OR+patient.drug.medicinalproduct:%22trazodone%22+OR+patient.drug.medicinalproduct:%22desyrel%22+OR+patient.drug.medicinalproduct:%22oleptro%22)
+
+mianserin:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22mianserin%22+OR+patient.drug.medicinalproduct:%22mianserin%22+OR+patient.drug.medicinalproduct:%22tolvon%22)
+
+mirtazapine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22mirtazapine%22+OR+patient.drug.medicinalproduct:%22mirtazapine%22+OR+patient.drug.medicinalproduct:%22remeron%22+OR+patient.drug.medicinalproduct:%22zispin%22)
+
+bupropion:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22bupropion%22+OR+patient.drug.medicinalproduct:%22bupropion%22+OR+patient.drug.medicinalproduct:%22wellbutrin%22+OR+patient.drug.medicinalproduct:%22zyban%22+OR+patient.drug.medicinalproduct:%22bupropion+hcl%22)
+
+tianeptine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22tianeptine%22+OR+patient.drug.medicinalproduct:%22tianeptine%22+OR+patient.drug.medicinalproduct:%22stablon%22+OR+patient.drug.medicinalproduct:%22coaxil%22+OR+patient.drug.medicinalproduct:%22tatinol%22)
+
+amineptine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22amineptine%22+OR+patient.drug.medicinalproduct:%22amineptine%22+OR+patient.drug.medicinalproduct:%22survector%22)
+
+atomoxetine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22atomoxetine%22+OR+patient.drug.medicinalproduct:%22atomoxetine%22+OR+patient.drug.medicinalproduct:%22strattera%22)
+
+imipramine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22imipramine%22+OR+patient.drug.medicinalproduct:%22imipramine%22+OR+patient.drug.medicinalproduct:%22tofranil%22)
+
+amitriptyline:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22amitriptyline%22+OR+patient.drug.medicinalproduct:%22amitriptyline%22+OR+patient.drug.medicinalproduct:%22elavil%22+OR+patient.drug.medicinalproduct:%22endep%22)
+
+trimipramine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22trimipramine%22+OR+patient.drug.medicinalproduct:%22trimipramine%22+OR+patient.drug.medicinalproduct:%22surmontil%22)
+
+doxepin:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22doxepin%22+OR+patient.drug.medicinalproduct:%22doxepin%22+OR+patient.drug.medicinalproduct:%22sinequan%22+OR+patient.drug.medicinalproduct:%22silenor%22)
+
+dothiepin:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22dothiepin%22+OR+patient.drug.medicinalproduct:%22dothiepin%22+OR+patient.drug.medicinalproduct:%22dosulepin%22+OR+patient.drug.medicinalproduct:%22prothiaden%22)
+
+clomipramine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22clomipramine%22+OR+patient.drug.medicinalproduct:%22clomipramine%22+OR+patient.drug.medicinalproduct:%22anafranil%22)
+
+desipramine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22desipramine%22+OR+patient.drug.medicinalproduct:%22desipramine%22+OR+patient.drug.medicinalproduct:%22norpramin%22)
+
+nortriptyline:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22nortriptyline%22+OR+patient.drug.medicinalproduct:%22nortriptyline%22+OR+patient.drug.medicinalproduct:%22pamelor%22+OR+patient.drug.medicinalproduct:%22aventyl%22)
+
+amoxapine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22amoxapine%22+OR+patient.drug.medicinalproduct:%22amoxapine%22+OR+patient.drug.medicinalproduct:%22asendin%22)
+
+reboxetine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22reboxetine%22+OR+patient.drug.medicinalproduct:%22reboxetine%22+OR+patient.drug.medicinalproduct:%22edronax%22)
+
+venlafaxine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22venlafaxine%22+OR+patient.drug.medicinalproduct:%22venlafaxine%22+OR+patient.drug.medicinalproduct:%22effexor%22)
+
+duloxetine:
+  https://api.fda.gov/drug/event.json?search=(patient.drug.openfda.generic_name:%22duloxetine%22+OR+patient.drug.medicinalproduct:%22duloxetine%22+OR+patient.drug.medicinalproduct:%22cymbalta%22)
+

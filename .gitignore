@@ -2,3 +2,9 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Manuscript itself is kept local-only, not published in the code/data repo.
+Research_Paper.docx
+Research_Paper_IEEE.docx
+make_paper.py
+make_paper_ieee.py

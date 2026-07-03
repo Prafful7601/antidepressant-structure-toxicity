@@ -1,5 +1,7 @@
 # Structure-Toxicity Analysis of Antidepressants
 
+Repository: https://github.com/Prafful7601/antidepressant-structure-toxicity
+
 Pharmacovigilance (FAERS) + cheminformatics (RDKit/ChEMBL/PubChem) pipeline
 linking antidepressant chemical structure to organ-system toxicity signals,
 with a structure-based Toxicity Risk Score (TRS) validated by leave-one-drug-out

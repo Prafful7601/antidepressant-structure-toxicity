@@ -276,8 +276,9 @@ body(f"Compounds with potency pChEMBL >= {POTENCY:g} against four named targets 
      f"scored for structural novelty (max Tanimoto similarity, Morgan "
      f"fingerprints, to the 28 reference drugs).")
 sub_head("G.  Data, Code and Ethics")
-body("All code and derived data are intended for a public, versioned repository "
-     "(e.g. GitHub/Zenodo) at publication [Repository URL / DOI to be inserted]. "
+body("All code and derived data are available at "
+     "https://github.com/Prafful7601/antidepressant-structure-toxicity "
+     "(a versioned, citable Zenodo release should be minted at submission). "
      "This study uses only de-identified, public aggregate data (FAERS, ChEMBL, "
      "PubChem) and does not constitute human subjects research; authors should "
      "confirm this against their institution's own determination.")

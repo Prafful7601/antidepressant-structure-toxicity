@@ -344,13 +344,14 @@ P("Analyses used Python 3 with RDKit, pandas, NumPy and SciPy. Every result is "
 H("2.8 Data and code availability", 2)
 P("All analysis code (data retrieval, disproportionality, cheminformatics, TRS "
   "fitting/cross-validation, candidate screening, sanity checks, figure/table "
-  "generation) and all derived data tables are intended for deposit in a public "
-  "code repository (e.g. GitHub) with a versioned, citable release (e.g. "
-  "Zenodo DOI) at publication. FAERS data are drawn from the public openFDA API "
-  "and are fully re-derivable from the versioned query strings in Supplementary "
-  "Material; raw FAERS extracts and all intermediate CSVs are included in the "
-  "repository so the full pipeline can be re-run without re-querying external "
-  "APIs. [Repository URL / DOI to be inserted at submission.]")
+  "generation) and all derived data tables are available at "
+  "https://github.com/Prafful7601/antidepressant-structure-toxicity. A "
+  "versioned, citable release (e.g. a Zenodo DOI archiving a tagged release of "
+  "this repository) should be minted at submission. FAERS data are drawn from "
+  "the public openFDA API and are fully re-derivable from the versioned query "
+  "strings in Supplementary Material; raw FAERS extracts and all intermediate "
+  "CSVs are included in the repository so the full pipeline can be re-run "
+  "without re-querying external APIs.")
 H("2.9 Ethics statement", 2)
 P("This study analyses only de-identified, publicly available, aggregate "
   "post-marketing surveillance data (FAERS, via openFDA) and public chemical "

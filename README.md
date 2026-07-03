@@ -2,15 +2,18 @@
 
 Repository: https://github.com/Prafful7601/antidepressant-structure-toxicity
 
+Author: Prafful Gupta (first author)
+
 Pharmacovigilance (FAERS) + cheminformatics (RDKit/ChEMBL/PubChem) pipeline
 linking antidepressant chemical structure to organ-system toxicity signals,
 with a structure-based Toxicity Risk Score (TRS) validated by leave-one-drug-out
 cross-validation.
 
-Manuscript drafts: `Research_Paper.docx` (full format) and
-`Research_Paper_IEEE.docx` (IEEE two-column). Both are regenerated from the
-CSVs in this repository by `make_paper.py` / `make_paper_ieee.py` - do not
-hand-edit the `.docx` files; edit the generator scripts and re-run.
+This repository holds the reproducible analysis pipeline (code + data +
+figures) behind the manuscript. The manuscript itself (drafts, results/summary
+write-ups, and their `.docx` generator scripts) is kept out of this public
+repo to avoid pre-disclosing unpublished results ahead of submission; it is
+maintained locally alongside this repo and regenerated from the same CSVs.
 
 ## Setup
 
@@ -54,12 +57,13 @@ pip install -r requirements.txt
 10. `sanity_check.py` - independently re-derives key statistics directly from
     raw data and flags any inconsistency with the pipeline's own outputs.
 11. `make_charts.py` - generates all figures (`charts/*.png`) from the CSVs
-    above; single source of truth, imported by both doc generators below.
-12. `make_paper.py`, `make_paper_ieee.py`, `make_results_doc.py` - generate the
-    manuscript `.docx` files from the CSVs and charts.
+    above; this is the single source of truth for every chart, including
+    those used in the (locally-maintained, not published here) manuscript.
 
 Every script reads its inputs from CSVs in this directory and is safe to
-re-run independently once its upstream CSVs exist.
+re-run independently once its upstream CSVs exist. The manuscript's own
+`.docx` generator scripts are not part of this repo (see above) but consume
+exactly the CSVs and charts produced by the steps above.
 
 ## Key methodological notes
 

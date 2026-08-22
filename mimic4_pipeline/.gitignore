@@ -1,0 +1,22 @@
+# Data and derived artifacts are never committed. This repo ships code only;
+# the MIMIC-IV demo (ODbL) and any future full MIMIC-IV data (PhysioNet DUA)
+# must be re-downloaded/rebuilt locally by anyone reproducing this pipeline.
+data/
+output/
+external/
+*.duckdb
+*.db
+*.db.wal
+*.csv
+*.csv.gz
+
+# ...except the checked-in reference table for the drug mapping tests, and
+# any small, non-patient reference CSVs we author by hand.
+!tests/fixtures/**/*.csv
+
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store

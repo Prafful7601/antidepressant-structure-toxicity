@@ -1,17 +1,62 @@
 # MIMIC-IV antidepressant exposure & organ-toxicity pipeline
 
-Tests whether antidepressant organ-system toxicity signals derived from FDA
-FAERS spontaneous reports (see the parent repo's FAERS/cheminformatics
-pipeline) are reproducible in measured MIMIC-IV clinical data.
+## What this is
+
+A retrospective analysis pipeline that tests whether antidepressant
+organ-system toxicity signals -- previously identified from FDA FAERS
+spontaneous adverse-event reports, in the parent repository's
+FAERS/cheminformatics work -- are reproducible in *measured* clinical data,
+using the MIMIC-IV critical-care database. Spontaneous-report signals
+(FAERS) are subject to reporting bias, confounding by indication, and no
+denominator; this pipeline builds the corresponding cohort, exposure, and
+outcome extraction needed to check those same signals against actual
+admissions, prescriptions, and lab trajectories.
+
+Given 28 curated antidepressants across 5 pharmacological classes
+(Tricyclic, SSRI, SNRI, RIMA, Atypical), it identifies which admissions
+were exposed to which class, extracts hepatic (ALT/AST/bilirubin) and
+sodium (hyponatremia) outcomes, adjusts for admission severity, and runs a
+primary Tricyclic-vs-SSRI/SNRI comparison with a pre-registered feasibility
+calculation for when the full database is available.
+
+## Why a demo-only build
 
 **Status:** built and validated against the open **MIMIC-IV Clinical
 Database Demo v2.2** (100 patients, no credentialing required). Full,
 credentialed MIMIC-IV access is pending with PhysioNet. The demo will not
 produce a meaningful clinical finding -- 100 patients yield only a handful
 of antidepressant-exposed admissions -- but every step of the pipeline runs
-end-to-end against it. When full access is granted, change one line (see
-[Moving to full MIMIC-IV](#moving-to-full-mimic-iv-once-credentialed)
-below) and rerun.
+end-to-end against it, and the demo run itself surfaced real, reportable
+findings (a curation trap in the 28-agent list, a labeling error in
+MIMIC-IV's own lab dictionary, a cohort-definition rule that was deleting
+real exposure -- see the task sections below). When full access is
+granted, change one line (see [Moving to full
+MIMIC-IV](#moving-to-full-mimic-iv-once-credentialed) below), rerun, and
+run `scripts/day_one_counts.py` first to check whether the Tricyclic arm
+exists at scale before building anything further on top of it.
+
+## No patient data in this repository
+
+**This repository contains no patient data of any kind.** Only code (SQL
+and Python) and documentation are committed; `data/`, `output/`, and
+`external/` (all gitignored, see `.gitignore`) hold the downloaded/built
+database and every derived artifact locally, and are never pushed. The
+open MIMIC-IV Clinical Database Demo (ODbL-licensed, used throughout this
+README) requires no credentialing. **The full MIMIC-IV database is
+separate, requires its own PhysioNet credentialing and signed data use
+agreement, and is not distributed here or by this project in any form** --
+running this pipeline against it requires independently completing that
+process at [physionet.org](https://physionet.org/) and downloading the
+data yourself (see [Moving to full
+MIMIC-IV](#moving-to-full-mimic-iv-once-credentialed)).
+
+## Status / citation
+
+This code accompanies a forthcoming paper and is released as the
+reproducible analysis pipeline behind it. It is a companion to the parent
+repository's FAERS/cheminformatics structure-toxicity pipeline (same
+author, same 28-agent curated list); see that repository's own README for
+the FAERS-side methodology and citation.
 
 ## Setup
 
@@ -95,10 +140,12 @@ from there instead of hardcoding a path. See
 ```
 mimic4_pipeline/
   README.md
+  LICENSE
   pyproject.toml
   scripts/
     build_database.sh        # task 1: download demo + build DuckDB (see above)
     validate_row_counts.py   # strict row-count gate, called by build_database.sh
+    day_one_counts.py        # run FIRST on full access: Tricyclic arm by agent + dose stratum + verdict
   sql/
     exposure/                 # task 2: drug-mapping queries
     cohort/                   # task 3: cohort/poisoning/liver-disease queries
@@ -661,6 +708,31 @@ Outputs: `output/analysis_primary_comparison.csv`,
    PhysioNet releases), so that gate is demo-only and should be replaced
    with a sanity check (e.g. patient count in the expected order of
    magnitude) for the full build.
+5. **Before building anything further, run the day-one feasibility check:**
+   ```bash
+   python3 scripts/day_one_counts.py
+   ```
+   Answers the one question the whole study depends on -- does the
+   Tricyclic exposure arm exist at scale -- in one read-only pass, printed
+   to stdout, in under a minute (0.9s on the demo), with nothing else
+   needing to have been run first. Reuses task 2's matcher, task 3's
+   dose-based classification, and task 4's lab-itemid resolution exactly
+   (no reimplementation, no risk of drift). Prints: total and exposed
+   admission counts; per-class counts under the primary (dose-reclassified)
+   rule; the Tricyclic arm broken down by individual agent and by dose
+   stratum, not just a single headline count; the same counts under the
+   pure-exclusion sensitivity rule for comparison; how many exposed
+   admissions have at least one ALT/AST/bilirubin/sodium value; and a
+   plain-language verdict (using achieved statistical power at the observed
+   sample sizes for a conventional small effect, Cohen's d=0.2) on whether
+   the Tricyclic arm is large enough to support the primary comparison,
+   naming a data-driven fallback pairwise comparison if not. Demo run
+   (2026-08-23, included for reference -- the script itself warns when it's
+   looking at the demo rather than the full DB): 0 Tricyclic admissions
+   either way, exactly matching `mimic4_pipeline.cohort`'s own numbers (see
+   task 3 above) -- a consistency check on the script itself, not a new
+   finding; verdict on the demo is "NOT LARGE ENOUGH" with fallback SSRI
+   (n=43) vs Atypical (n=42).
 
 ## Provenance
 
@@ -672,3 +744,9 @@ Outputs: `output/analysis_primary_comparison.csv`,
 - MIMIC-IV Clinical Database Demo v2.2:
   [physionet.org/content/mimic-iv-demo/2.2](https://physionet.org/content/mimic-iv-demo/2.2/),
   ODbL-licensed, no credentialing required.
+
+## License
+
+This project's code is MIT-licensed (see `LICENSE`). It does not cover, and
+does not grant any rights to, MIMIC-IV data itself -- see [No patient
+data](#no-patient-data-in-this-repository) above.

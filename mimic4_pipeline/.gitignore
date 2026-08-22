@@ -1,18 +1,20 @@
 # Data and derived artifacts are never committed. This repo ships code only;
 # the MIMIC-IV demo (ODbL) and any future full MIMIC-IV data (PhysioNet DUA)
 # must be re-downloaded/rebuilt locally by anyone reproducing this pipeline.
+# The directory ignores (data/, output/, external/) are the main defense --
+# everywhere those files actually live -- but the extension patterns are
+# kept broad and unanchored (no leading "/") so they also catch a stray
+# data file anywhere else in the tree, not just in those directories.
 data/
 output/
 external/
 *.duckdb
+*.duckdb.wal
 *.db
 *.db.wal
 *.csv
 *.csv.gz
-
-# ...except the checked-in reference table for the drug mapping tests, and
-# any small, non-patient reference CSVs we author by hand.
-!tests/fixtures/**/*.csv
+*.parquet
 
 __pycache__/
 *.pyc

@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+~$*.doc*
 
 # Manuscript and related write-ups are kept local-only, not published in the
 # code/data repo.
@@ -16,6 +17,8 @@ make_results_doc.py
 make_summary_doc.py
 MIMIC4_Validation_Paper.docx
 make_mimic4_paper.py
+Antidepressant_Organ_Toxicity_Unified_Study.docx
+make_final_paper.py
 
 # mimic4_charts/*.png are figures/results derived from the credentialed
 # MIMIC-IV database, not from the openly-licensed FAERS/openFDA data the

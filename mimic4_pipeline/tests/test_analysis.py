@@ -13,10 +13,14 @@ from __future__ import annotations
 
 import math
 
+import numpy as np
+import pandas as pd
+
 from mimic4_pipeline.analysis import (
     CLINICAL_THRESHOLDS,
     MIN_GROUP_SIZE_FOR_TEST,
     PRIMARY_ANALYTES,
+    adjusted_odds_ratio,
     safe_two_group_comparison,
 )
 
@@ -102,3 +106,80 @@ def test_sodium_uses_absolute_value_metric_not_uln():
     # the absolute mEq/L scale (moderate hyponatremia <=130 mEq/L).
     assert CLINICAL_THRESHOLDS["Sodium"]["metric"] == "extreme_value"
     assert CLINICAL_THRESHOLDS["Sodium"]["op"] == "<="
+
+
+# --- adjusted_odds_ratio (severity-adjusted comparison core) ------------
+# DB-independent by design -- see the module docstring on why the
+# clinical-threshold-crossing indicator, not the raw delta, is what gets
+# adjusted -- so these run on plain synthetic DataFrames.
+
+
+def _synthetic_logit_df(n_treated=200, n_untreated=200, treated_rate=0.5, untreated_rate=0.1, seed=0):
+    rng = np.random.default_rng(seed)
+    treated = pd.DataFrame(
+        {
+            "is_tricyclic": 1,
+            "crosses": rng.binomial(1, treated_rate, n_treated),
+            "charlson_comorbidity_index": rng.integers(0, 6, n_treated),
+        }
+    )
+    untreated = pd.DataFrame(
+        {
+            "is_tricyclic": 0,
+            "crosses": rng.binomial(1, untreated_rate, n_untreated),
+            "charlson_comorbidity_index": rng.integers(0, 6, n_untreated),
+        }
+    )
+    return pd.concat([treated, untreated], ignore_index=True)
+
+
+def test_adjusted_odds_ratio_insufficient_data_does_not_crash():
+    df = pd.DataFrame({"crosses": [1], "is_tricyclic": [1], "charlson_comorbidity_index": [2]})
+    result = adjusted_odds_ratio(df, "crosses", "is_tricyclic", ["charlson_comorbidity_index"])
+    assert result["status"].startswith("insufficient_data")
+    assert result["adjusted_or"] is None
+
+
+def test_adjusted_odds_ratio_degenerate_no_outcome_variation_does_not_crash():
+    df = pd.DataFrame(
+        {
+            "crosses": [0] * 10,
+            "is_tricyclic": [1, 0] * 5,
+            "charlson_comorbidity_index": [1, 2] * 5,
+        }
+    )
+    result = adjusted_odds_ratio(df, "crosses", "is_tricyclic", ["charlson_comorbidity_index"])
+    assert result["status"] == "degenerate: no variation in the outcome (all events or none)"
+    assert result["adjusted_or"] is None
+
+
+def test_adjusted_odds_ratio_separation_within_one_group_does_not_crash():
+    # Every event falls in the treated group; untreated has zero events --
+    # a real (quasi-)separation scenario a naive fit would mishandle.
+    df = pd.DataFrame(
+        {
+            "crosses": [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+            "is_tricyclic": [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+            "charlson_comorbidity_index": [1, 2, 3, 1, 2, 1, 2, 3, 1, 2],
+        }
+    )
+    result = adjusted_odds_ratio(df, "crosses", "is_tricyclic", ["charlson_comorbidity_index"])
+    assert result["status"].startswith("degenerate: no outcome variation within")
+    assert result["adjusted_or"] is None
+
+
+def test_adjusted_odds_ratio_valid_fit_reports_or_with_sane_ci():
+    df = _synthetic_logit_df(treated_rate=0.5, untreated_rate=0.1)
+    result = adjusted_odds_ratio(df, "crosses", "is_tricyclic", ["charlson_comorbidity_index"])
+    assert result["status"] == "ok"
+    assert result["adjusted_or"] > 1.0  # treated group has the higher event rate by construction
+    assert result["adjusted_or_ci_low"] < result["adjusted_or"] < result["adjusted_or_ci_high"]
+    assert result["adjusted_p_value"] is not None and 0.0 <= result["adjusted_p_value"] <= 1.0
+    assert result["n_treated"] == 200 and result["n_untreated"] == 200
+
+
+def test_adjusted_odds_ratio_equal_rates_gives_or_near_one():
+    df = _synthetic_logit_df(treated_rate=0.2, untreated_rate=0.2, seed=1)
+    result = adjusted_odds_ratio(df, "crosses", "is_tricyclic", ["charlson_comorbidity_index"])
+    assert result["status"] == "ok"
+    assert 0.5 < result["adjusted_or"] < 2.0  # no true effect -- should land near 1, not blow up

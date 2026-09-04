@@ -43,6 +43,7 @@ import duckdb
 import numpy as np
 import pandas as pd
 from scipy import stats as sstats
+import statsmodels.formula.api as smf
 from statsmodels.stats.power import TTestIndPower
 from statsmodels.stats.proportion import proportion_confint
 
@@ -79,7 +80,6 @@ CLINICAL_THRESHOLDS: dict[str, dict] = {
 }
 
 ANALYSIS_CSV = OUTPUT_DIR / "analysis_primary_comparison.csv"
-THRESHOLD_CSV = OUTPUT_DIR / "analysis_clinical_threshold_crossing.csv"
 FEASIBILITY_CSV = OUTPUT_DIR / "feasibility_projection.csv"
 
 
@@ -107,6 +107,14 @@ def safe_two_group_comparison(a, b, label: str) -> dict:
         "n_group_b": len(b),
         "mean_a": float(np.mean(a)) if len(a) else None,
         "mean_b": float(np.mean(b)) if len(b) else None,
+        # Reported alongside the mean every time, not just when something
+        # looks off: a mean-difference CI can be dominated by a handful of
+        # extreme-outlier admissions in distributions this skewed (delta
+        # values in the thousands of U/L do occur), while the median (and
+        # the secondary rank-based test) are robust to exactly that. A
+        # mean/median divergence is itself diagnostic, not a footnote.
+        "median_a": float(np.median(a)) if len(a) else None,
+        "median_b": float(np.median(b)) if len(b) else None,
         "mean_diff_a_minus_b": None,
         "mean_diff_ci_low": None,
         "mean_diff_ci_high": None,
@@ -200,15 +208,30 @@ def clinical_threshold_crossing(merged: pd.DataFrame, verbose: bool = True) -> p
     return df
 
 
-def run_primary_comparison(con: duckdb.DuckDBPyConnection, verbose: bool = True) -> pd.DataFrame:
+def run_primary_comparison(
+    con: duckdb.DuckDBPyConnection, exclude_overdose: bool = False, verbose: bool = True
+) -> pd.DataFrame:
     """Tricyclic vs (SSRI+SNRI), effect size (mean difference + 95% CI,
     primary) and Mann-Whitney p-value (secondary), per analyte, on
-    delta_from_baseline. (Severity-adjusted regression is the natural next
-    step once a comparison group has enough rows to fit one.)
+    delta_from_baseline.
+
+    ``exclude_overdose`` runs the brief's task-3 "both with and without"
+    overdose cohorts (`is_overdose_admission`, task 3) as this comparison,
+    not just as an available column nobody reads: TCA/SSRI overdose
+    admissions are exactly the kind of case that can produce an extreme,
+    admission-reason-driven (not exposure-driven) enzyme spike -- see the
+    mean/median divergence this surfaced on the first full-database run,
+    documented in the README.
+
+    (Severity-adjusted regression is the natural next step once a
+    comparison group has enough rows to fit one -- it does now.)
     """
     cohort = con.execute(
-        "select hadm_id, exposure_class from mimiciv_analysis.cohort where exposure_class is not null"
+        "select hadm_id, exposure_class, is_overdose_admission from mimiciv_analysis.cohort "
+        "where exposure_class is not null"
     ).fetchdf()
+    if exclude_overdose:
+        cohort = cohort[~cohort["is_overdose_admission"]]
     outcomes = con.execute("select * from mimiciv_analysis.outcomes_long").fetchdf()
 
     merged = outcomes.merge(cohort, on="hadm_id", how="inner")
@@ -216,7 +239,8 @@ def run_primary_comparison(con: duckdb.DuckDBPyConnection, verbose: bool = True)
     group_b = merged[merged["exposure_class"].isin(["SSRI", "SNRI"])]
 
     if verbose:
-        print("=== Primary comparison: Tricyclic vs (SSRI+SNRI), delta from baseline ===")
+        label = "excluding overdose admissions" if exclude_overdose else "including overdose admissions"
+        print(f"=== Primary comparison ({label}): Tricyclic vs (SSRI+SNRI), delta from baseline ===")
         print("  Effect size (mean difference, 95% CI) is PRIMARY; the Mann-Whitney p-value is secondary.")
         print(f"  Group A (Tricyclic) admissions available: {group_a['hadm_id'].nunique()}")
         print(f"  Group B (SSRI+SNRI) admissions available: {group_b['hadm_id'].nunique()}")
@@ -230,18 +254,155 @@ def run_primary_comparison(con: duckdb.DuckDBPyConnection, verbose: bool = True)
         if verbose:
             if result["status"] == "ok":
                 print(f"  {analyte:16s} n_a={result['n_group_a']:3d} n_b={result['n_group_b']:3d} "
-                      f"diff={result['mean_diff_a_minus_b']:+.2f} "
+                      f"mean_diff={result['mean_diff_a_minus_b']:+.2f} "
                       f"[{result['mean_diff_ci_low']:+.2f}, {result['mean_diff_ci_high']:+.2f}] "
+                      f"median_a={result['median_a']:+.2f} median_b={result['median_b']:+.2f} "
                       f"p(secondary)={result['p_value_mannwhitney_secondary']:.4f}")
             else:
                 print(f"  {analyte:16s} SKIPPED -- {result['status']}")
 
     threshold_df = clinical_threshold_crossing(merged, verbose=verbose)
-    threshold_df.to_csv(THRESHOLD_CSV, index=False)
+    suffix = "_excl_overdose" if exclude_overdose else ""
+    threshold_path = OUTPUT_DIR / f"analysis_clinical_threshold_crossing{suffix}.csv"
+    threshold_df.to_csv(threshold_path, index=False)
     if verbose:
-        print(f"\nWrote {len(threshold_df)} rows -> {THRESHOLD_CSV}")
+        print(f"\nWrote {len(threshold_df)} rows -> {threshold_path}")
 
     return pd.DataFrame(rows)
+
+
+def adjusted_odds_ratio(
+    df: pd.DataFrame, outcome_col: str, treatment_col: str, covariate_cols: list[str]
+) -> dict:
+    """Core, DB-independent logistic-regression fit: ``outcome_col`` (must
+    be 0/1) on ``treatment_col`` (must be 0/1) plus ``covariate_cols``.
+    Returns the treatment's adjusted odds ratio with a 95% CI, guarded
+    against the same class of degenerate inputs as
+    :func:`safe_two_group_comparison` -- separated by design so this can be
+    unit-tested without a database (see ``tests/test_analysis.py``).
+    """
+    result = {
+        "n_treated": int(df[treatment_col].sum()) if len(df) else 0,
+        "n_untreated": int((df[treatment_col] == 0).sum()) if len(df) else 0,
+        "n_events_treated": None,
+        "n_events_untreated": None,
+        "adjusted_or": None,
+        "adjusted_or_ci_low": None,
+        "adjusted_or_ci_high": None,
+        "adjusted_p_value": None,
+        "status": None,
+    }
+    df = df.dropna(subset=[outcome_col, treatment_col, *covariate_cols])
+    n_treated = int(df[treatment_col].sum())
+    n_untreated = int((df[treatment_col] == 0).sum())
+    result["n_treated"] = n_treated
+    result["n_untreated"] = n_untreated
+
+    if n_treated < MIN_GROUP_SIZE_FOR_TEST or n_untreated < MIN_GROUP_SIZE_FOR_TEST:
+        result["status"] = f"insufficient_data: n_treated={n_treated}, n_untreated={n_untreated}"
+        return result
+
+    result["n_events_treated"] = int(df.loc[df[treatment_col] == 1, outcome_col].sum())
+    result["n_events_untreated"] = int(df.loc[df[treatment_col] == 0, outcome_col].sum())
+
+    if df[outcome_col].nunique() < 2:
+        result["status"] = "degenerate: no variation in the outcome (all events or none)"
+        return result
+    # Perfect or quasi-perfect separation (e.g. every event falls in one
+    # group) makes the MLE diverge -- check for it explicitly rather than
+    # let statsmodels emit an unreliable coefficient with a huge SE.
+    for grp in (0, 1):
+        sub = df[df[treatment_col] == grp][outcome_col]
+        if len(sub) and sub.nunique() < 2:
+            result["status"] = f"degenerate: no outcome variation within {treatment_col}={grp}"
+            return result
+
+    formula = f"{outcome_col} ~ {treatment_col} + " + " + ".join(covariate_cols)
+    try:
+        model = smf.logit(formula, data=df).fit(disp=0, maxiter=100)
+    except Exception as exc:  # noqa: BLE001 -- report, don't crash on a convergence/separation failure
+        result["status"] = f"model_failed: {exc}"
+        return result
+
+    if not model.mle_retvals.get("converged", True):
+        result["status"] = "did_not_converge"
+        return result
+
+    coef = model.params.get(treatment_col)
+    if coef is None or not np.isfinite(coef) or abs(coef) > 20:
+        # An extreme (near-infinite-odds-ratio) coefficient is the signature
+        # of separation statsmodels' convergence check alone doesn't always
+        # catch -- treat it as a failure rather than report exp(20)-ish as
+        # if it were a real effect size.
+        result["status"] = "unstable_fit: coefficient diverged (likely separation)"
+        return result
+
+    ci = model.conf_int().loc[treatment_col]
+    result["adjusted_or"] = float(np.exp(coef))
+    result["adjusted_or_ci_low"] = float(np.exp(ci[0]))
+    result["adjusted_or_ci_high"] = float(np.exp(ci[1]))
+    result["adjusted_p_value"] = float(model.pvalues[treatment_col])
+    result["status"] = "ok"
+    return result
+
+
+def severity_adjusted_comparison(
+    con: duckdb.DuckDBPyConnection, exclude_overdose: bool = False, verbose: bool = True
+) -> pd.DataFrame:
+    """Severity-adjusted Tricyclic-vs-(SSRI+SNRI) comparison (brief, task 7:
+    "adjusted for admission severity") -- fit on the pre-specified
+    clinical-threshold-crossing indicator (:data:`CLINICAL_THRESHOLDS`), not
+    the raw delta, because the raw delta's *mean* is dominated by rare
+    extreme-outlier admissions (see :func:`run_primary_comparison`'s
+    mean/median divergence, documented in the README) that a linear
+    regression would inherit; logistic regression on a binary,
+    already-robust-by-construction outcome does not have that problem.
+
+    Charlson comorbidity index is the covariate (per
+    :mod:`mimic4_pipeline.severity`'s recommendation: it covers the whole
+    cohort, unlike the ICU-only first-day severity scores).
+    """
+    cohort = con.execute(
+        "select hadm_id, exposure_class, is_overdose_admission from mimiciv_analysis.cohort "
+        "where exposure_class in ('Tricyclic', 'SSRI', 'SNRI')"
+    ).fetchdf()
+    if exclude_overdose:
+        cohort = cohort[~cohort["is_overdose_admission"]]
+    cohort["is_tricyclic"] = (cohort["exposure_class"] == "Tricyclic").astype(int)
+
+    severity = con.execute(
+        "select hadm_id, charlson_comorbidity_index from mimiciv_analysis.severity"
+    ).fetchdf()
+    outcomes = con.execute("select * from mimiciv_analysis.outcomes_long").fetchdf()
+    merged = outcomes.merge(cohort, on="hadm_id", how="inner").merge(severity, on="hadm_id", how="left")
+
+    if verbose:
+        label = "excluding overdose admissions" if exclude_overdose else "including overdose admissions"
+        print(f"=== Severity-adjusted comparison ({label}): logistic regression, "
+              f"crosses_threshold ~ is_tricyclic + charlson_comorbidity_index ===")
+
+    rows = []
+    for analyte in PRIMARY_ANALYTES:
+        spec = CLINICAL_THRESHOLDS[analyte]
+        sub = merged[merged["analyte"] == analyte].copy()
+        sub["crosses"] = sub.apply(lambda r: _crosses_threshold(r, spec), axis=1)
+        sub = sub.dropna(subset=["crosses"])
+        sub["crosses"] = sub["crosses"].astype(int)
+
+        fit = adjusted_odds_ratio(sub, "crosses", "is_tricyclic", ["charlson_comorbidity_index"])
+        fit["analyte"] = analyte
+        rows.append(fit)
+        if verbose:
+            if fit["status"] == "ok":
+                print(f"  {analyte:16s} adjusted OR(Tricyclic)={fit['adjusted_or']:.3f} "
+                      f"[{fit['adjusted_or_ci_low']:.3f}, {fit['adjusted_or_ci_high']:.3f}] "
+                      f"p={fit['adjusted_p_value']:.4f}  (n={fit['n_treated']}+{fit['n_untreated']})")
+            else:
+                print(f"  {analyte:16s} SKIPPED -- {fit['status']}")
+
+    cols = ["analyte", "n_treated", "n_untreated", "n_events_treated", "n_events_untreated",
+            "adjusted_or", "adjusted_or_ci_low", "adjusted_or_ci_high", "adjusted_p_value", "status"]
+    return pd.DataFrame(rows)[cols]
 
 
 def feasibility_projection(con: duckdb.DuckDBPyConnection, verbose: bool = True) -> pd.DataFrame:
@@ -387,10 +548,26 @@ def main() -> int:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect(str(DB_PATH), read_only=True)
     try:
-        comparison_df = run_primary_comparison(con)
+        # Brief, task 3: "produce the cohort both with and without" overdose
+        # admissions. Both variants of the primary comparison are run here,
+        # not just the column left sitting unused.
+        comparison_df = run_primary_comparison(con, exclude_overdose=False)
         comparison_df.to_csv(ANALYSIS_CSV, index=False)
         print(f"\nWrote {len(comparison_df)} rows -> {ANALYSIS_CSV}")
 
+        print()
+        comparison_excl_df = run_primary_comparison(con, exclude_overdose=True)
+        excl_path = OUTPUT_DIR / "analysis_primary_comparison_excl_overdose.csv"
+        comparison_excl_df.to_csv(excl_path, index=False)
+        print(f"\nWrote {len(comparison_excl_df)} rows -> {excl_path}")
+
+        print()
+        adjusted_df = severity_adjusted_comparison(con, exclude_overdose=False)
+        adjusted_path = OUTPUT_DIR / "analysis_severity_adjusted.csv"
+        adjusted_df.to_csv(adjusted_path, index=False)
+        print(f"\nWrote {len(adjusted_df)} rows -> {adjusted_path}")
+
+        print()
         feasibility_df = feasibility_projection(con)
         feasibility_df.to_csv(FEASIBILITY_CSV, index=False)
         print(f"Wrote {len(feasibility_df)} rows -> {FEASIBILITY_CSV}")

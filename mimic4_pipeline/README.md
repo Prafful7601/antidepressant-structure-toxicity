@@ -120,6 +120,7 @@ python3 -m mimic4_pipeline.outcomes --shape both    # task 4
 # task 5: investigated, deferred -- see that section below, nothing to run
 python3 -m mimic4_pipeline.severity                 # task 6
 python3 -m mimic4_pipeline.analysis                 # task 7
+python3 -m mimic4_pipeline.propensity               # task 8
 ```
 
 Each step reads from tables the previous step wrote into the DuckDB
@@ -152,6 +153,7 @@ mimic4_pipeline/
     outcomes/                 # task 4: lab itemid resolution + extraction
     cardiac/                  # task 5: investigation only (deferred, see below)
     severity/                 # task 6: ports mimic-code's severity concepts onto the cohort
+    propensity/                # task 8: propensity-model covariates
   src/mimic4_pipeline/
     config.py                 # DB path + demo row-count constants
     drug_mapping.py           # task 2: the free-text matcher (see below)
@@ -161,12 +163,14 @@ mimic4_pipeline/
     outcomes.py               # task 4: lab itemid resolution + baseline/trajectory extraction
     severity.py               # task 6: severity score coverage over the cohort
     analysis.py                # task 7: guarded comparison + feasibility/power projection
+    propensity.py              # task 8: propensity-score matching + balance diagnostics
   tests/
     test_drug_mapping.py      # unit tests for the matcher, incl. deliberate traps
     test_dose.py              # unit tests for dose parsing + stratification
     test_cohort.py            # unit tests for dose-based multi-class reclassification
     test_outcomes.py          # integration tests against the built demo DB
     test_analysis.py          # unit tests for the guarded comparison + clinical thresholds
+    test_propensity.py         # unit tests for matching, balance diagnostics, caliper enforcement
   data/     (gitignored)       # raw demo download + built .duckdb file
   output/   (gitignored)       # audit CSVs, figures, results
   external/ (gitignored)       # pinned mimic-code clone
@@ -686,6 +690,72 @@ conclusion is now the opposite of "we need more power":
 Outputs: `output/analysis_primary_comparison.csv`,
 `output/analysis_clinical_threshold_crossing.csv`,
 `output/feasibility_projection.csv`.
+
+## Task 8: propensity-score-matched sensitivity analysis
+
+```bash
+python3 -m mimic4_pipeline.propensity
+```
+
+The severity-adjusted comparison (task 7) adjusts for one covariate
+(Charlson index); confounding by indication -- why a clinician chose a
+tricyclic over an SSRI/SNRI in the first place -- is not resolved by that
+alone, and task 7's own docstring said so. This module (`propensity.py`;
+covariates in `sql/propensity/covariates.sql`) fits a logistic propensity
+model (tricyclic exposure ~ age, sex, an emergency-admission flag, and all
+17 individual Charlson comorbidity components from mimic-code's own
+concept, not just the summary index), matches Tricyclic-exposed admissions
+1:1 without replacement to SSRI/SNRI-exposed admissions on the logit
+propensity score within a 0.2-SD caliper (Austin 2011's convention),
+reports the standard balance diagnostic (standardized mean difference,
+before/after), and re-runs the primary comparison and clinical-threshold
+analyses on the matched cohort.
+
+Matching is a KD-tree nearest-neighbor search (`scipy.spatial.cKDTree`)
+rebuilt in small batches as controls are claimed -- an efficient
+approximation to exact sequential greedy matching at this scale (~7k
+treated vs ~80k controls), not full optimal matching; documented as such in
+the function's docstring. Unit-tested (`tests/test_propensity.py`) for
+balance-diagnostic correctness (including the zero-variance-covariate edge
+case), caliper enforcement, no-duplicate-control-usage, and determinism
+given a fixed seed.
+
+**Full-database result (2026-09-04, PhysioNet-credentialed MIMIC-IV v3.1 --
+see below):** 7,438 of 7,465 Tricyclic admissions (99.6%) matched. 3 of 20
+covariates were imbalanced (|SMD|>=0.1: age, congestive heart failure,
+dementia) before matching; 0 remained imbalanced after -- a clean match.
+In the matched cohort, the ALT/AST/bilirubin mean-difference confidence
+intervals all moved to spanning zero (unlike the unadjusted comparison,
+where all three excluded zero) -- some of the apparent hepatic signal in
+the Charlson-only-adjusted analysis was attributable to exactly the
+demographic/comorbidity imbalance matching corrects for. Sodium's mean
+difference remained significant (+0.20 mEq/L, p=0.0047) even after full
+matching, while the proportion reaching moderate hyponatremia converged
+between groups -- a real, robust mean shift, not a robust difference in
+reaching clinically severe hyponatremia specifically.
+
+Outputs: `output/propensity_balance.csv`, `output/propensity_matched_pairs.csv`,
+`output/analysis_matched_comparison.csv`, `output/analysis_matched_threshold_crossing.csv`.
+
+## Full-database run (2026-09-04)
+
+Tasks 1-8 above were built and validated against the demo, then run
+end-to-end against the full, PhysioNet-credentialed MIMIC-IV v3.1 database
+(546,028 admissions, 364,627 patients; all 28 tables matched mimic-code's
+own published v3.1 row-count oracle exactly). Headline results:
+
+- **`scripts/day_one_counts.py` verdict: LARGE ENOUGH.** 7,465 Tricyclic
+  admissions (vs. 0 in the demo) -- achieved power 1.00 for a conventional
+  small effect. The demo's zero-Tricyclic result was purely a small-sample
+  artifact, exactly as task 7's feasibility projection had argued.
+- Primary comparison, severity adjustment, and the propensity-matched
+  sensitivity analysis above are all from this full-database run, not the
+  demo.
+- Full results, methods, and the FAERS-vs-MIMIC-IV replication comparison
+  are written up in `MIMIC4_Validation_Paper.docx` (generated by
+  `make_mimic4_paper.py` at the repository root; both are local-only and
+  gitignored, matching the parent repository's own manuscript convention --
+  see its README).
 
 ## Moving to full MIMIC-IV (once credentialed)
 

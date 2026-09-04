@@ -14,3 +14,13 @@ Project_Summary_for_Guide.docx
 Research_Roadmap.docx
 make_results_doc.py
 make_summary_doc.py
+MIMIC4_Validation_Paper.docx
+make_mimic4_paper.py
+
+# mimic4_charts/*.png are figures/results derived from the credentialed
+# MIMIC-IV database, not from the openly-licensed FAERS/openFDA data the
+# sibling charts/ directory above draws from -- kept local, consistent
+# with mimic4_pipeline/output/'s own PhysioNet-DUA-driven policy (see
+# mimic4_pipeline/.gitignore), even though the *code* that generates them
+# (make_mimic4_charts.py) is ordinary matplotlib logic and is tracked.
+mimic4_charts/

@@ -29,6 +29,14 @@ PROJECT_ROOT = _PACKAGE_DIR.parent.parent
 # THE ONE LINE THAT CHANGES when full MIMIC-IV access is granted:
 _DEFAULT_DB_PATH = PROJECT_ROOT / "data" / "mimic4_demo.duckdb"
 # --------------------------------------------------------------------------
+# Kept at the demo path in the *committed* file on purpose: this file is
+# published, and anyone else cloning the repo only ever has the demo (see
+# the README's "no patient data" section) -- a committed default pointing
+# at a full-database filename that doesn't exist for them would silently
+# break the README's own demo reproduction steps. For this machine's own
+# full-database work, use the MIMIC4_DB_PATH environment variable instead
+# of editing this line (it takes priority -- see get_db_path() below):
+#   export MIMIC4_DB_PATH="$(pwd)/data/mimic4_full.duckdb"
 
 SQL_DIR = PROJECT_ROOT / "sql"
 OUTPUT_DIR = PROJECT_ROOT / "output"

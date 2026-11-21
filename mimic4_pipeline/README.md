@@ -737,6 +737,37 @@ reaching clinically severe hyponatremia specifically.
 Outputs: `output/propensity_balance.csv`, `output/propensity_matched_pairs.csv`,
 `output/analysis_matched_comparison.csv`, `output/analysis_matched_threshold_crossing.csv`.
 
+## Task 9: exposure-timing and dose sensitivity analyses (2026-11-21)
+
+```bash
+MIMIC4_DB_PATH=data/mimic4_full.duckdb python3 -m mimic4_pipeline.sensitivity
+```
+
+Added in response to peer review. Task 4's trajectory takes the extreme
+value over the *whole* admission, so part of it can precede the first
+antidepressant order; and task 3's rule keeps low-dose amitriptyline/doxepin
+(pain/sleep use) in the single-class Tricyclic arm. This module
+(`sensitivity.py`) re-runs the Charlson-adjusted threshold-crossing model
+(task 7, unchanged thresholds) with the extreme re-derived from lab draws at
+or after the first systemic order of the admission's assigned class
+("post-exposure"), restricted further to admissions not already past the
+threshold before that order ("incident"), excluding low-dose Tricyclic
+admissions, and combining the last two; it also reports matched-cohort
+threshold odds ratios (task 8 pairs) and baseline sodium by group.
+
+**Full-database result -- this revises task 8's sodium reading.** 29-40% of
+whole-admission extremes were charted before first exposure. The
+Charlson-adjusted sodium OR of 1.12 (p=0.0096) fell to 1.06 (p=0.25)
+post-exposure, 1.02 for incident hyponatremia, and 0.98 in the matched
+cohort. Tricyclic admissions start from a lower baseline sodium (138.2 vs
+138.6 mEq/L); the +0.16/+0.20 mEq/L delta (extreme minus baseline) is a
+slightly *smaller* decline with tricyclics, not an excess sodium-lowering
+effect. Hepatic ORs were at or below 1 in every analysis; lower odds of
+bilirubin >=2x ULN persisted throughout (OR 0.68-0.80).
+
+Outputs: `output/analysis_reviewer_sensitivity.csv`,
+`output/analysis_extreme_before_exposure.csv`, `output/analysis_baseline_sodium.csv`.
+
 ## Full-database run (2026-09-04)
 
 Tasks 1-8 above were built and validated against the demo, then run
